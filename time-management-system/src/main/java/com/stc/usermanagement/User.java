@@ -13,12 +13,12 @@ public abstract class User {
         this.role = role;
     }
 
-    // Giriş işlemi için dökümanda belirtilen metod
+     
     public boolean login(String username, String password) {
         return this.username.equals(username) && this.password.equals(password);
     }
 
-    // Getter ve Setter metodlarını buraya ekleyebilirsin
+     
     public String getRole() {
         return role;
     }
