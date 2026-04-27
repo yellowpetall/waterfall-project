@@ -1,8 +1,14 @@
 package com.stc.usermanagement;
 
+import java.io.IOException;
+
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.stage.Stage;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 
@@ -37,6 +43,33 @@ public class LoginController {
             
             // Go to the user dash board
             showInfoAlert("Successful", "Welcome, " + user + "!");
+            
+            try {
+                // Load new FXML file
+            	String dashboardName = "";
+            	if(loggedInUser instanceof Employee){
+            		dashboardName = "EmployeeDashboard.fxml";
+            	}else if(loggedInUser instanceof Supervisor) {
+            		dashboardName = "SupervisorDashboard.fxml";
+            	}else {
+            		dashboardName = "HRDashboard.fxml";
+            	}
+            	
+                FXMLLoader loader = new FXMLLoader(getClass().getResource(dashboardName));
+                Parent root = loader.load();
+
+                // Find the current stage
+                Stage stage = (Stage) usernameField.getScene().getWindow();
+
+                // Put new stage in the screen
+                Scene scene = new Scene(root);
+                stage.setScene(scene);
+                stage.show();
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                showErrorAlert("Error", "New screen couldn't be loaded!");
+            }
             
         } else {
             System.out.println("Login Failed!");
