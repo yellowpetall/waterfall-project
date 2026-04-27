@@ -13,7 +13,7 @@ public class AuthenticationService {
              BufferedReader br = new BufferedReader(new java.io.InputStreamReader(is))) {
             
             if (is == null) {
-                System.err.println("Hata: users.txt resources klasöründe bulunamadı!");
+                System.err.println("Error: users.txt not found in resources folder!");
                 return false;
             }
 

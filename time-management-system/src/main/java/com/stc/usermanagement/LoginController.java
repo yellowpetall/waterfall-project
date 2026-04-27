@@ -22,7 +22,7 @@ public class LoginController {
         String user = usernameField.getText();
         String pass = passwordField.getText();
         
-        System.out.println("Giriş denemesi: " + user);
+        System.out.println("Login attempt: " + user);
         
         
         boolean isAuthenticated = authService.authenticate(user, pass);
@@ -31,16 +31,16 @@ public class LoginController {
             // Get the user object of the person who has logged in.
             User loggedInUser = AuthenticationService.getCurrentUser();
             
-            System.out.println("Giriş Başarılı!");
-            System.out.println("Kullanıcı ID: " + loggedInUser.getUserId());
-            System.out.println("Rol: " + loggedInUser.getClass().getSimpleName());
+            System.out.println("Login Successful!");
+            System.out.println("User ID: " + loggedInUser.getUserId());
+            System.out.println("Employee: " + loggedInUser.getClass().getSimpleName());
             
             // Go to the user dash board
-            showInfoAlert("Başarılı", "Hoş geldiniz, " + user + "!");
+            showInfoAlert("Successful", "Welcome, " + user + "!");
             
         } else {
-            System.out.println("Hatalı Giriş!");
-            showErrorAlert("Giriş Başarısız", "Kullanıcı adı veya şifre hatalı.");
+            System.out.println("Login Failed!");
+            showErrorAlert("Login Failed", "Username or password is incorrect.");
         }
     }
 
