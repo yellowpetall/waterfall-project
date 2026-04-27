@@ -4,22 +4,26 @@ public abstract class User {
     private int userId;
     private String username;
     private String password;
-    private String role; // "Employee", "Supervisor", "HR"
 
-    public User(int userId, String username, String password, String role) {
+    public User(int userId, String username, String password) {
         this.userId = userId;
         this.username = username;
         this.password = password;
-        this.role = role;
     }
 
-     
-    public boolean login(String username, String password) {
-        return this.username.equals(username) && this.password.equals(password);
-    }
+	public int getUserId() {
+		return userId;
+	}
 
-     
-    public String getRole() {
-        return role;
-    }
+	public String getUsername() {
+		return username;
+	}
+
+
+	public String getPassword() {
+		return password;
+	}
+
+    
+    
 }

@@ -7,15 +7,18 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.stc.usermanagement.LoginController">
    <children>
-      <Button layoutX="274.0" layoutY="247.0" mnemonicParsing="false" text="Login" />
+      <Button layoutX="274.0" layoutY="247.0" mnemonicParsing="false" onAction="#handleLogin" text="Login" />
       <Label layoutX="70.0" layoutY="115.0" text="Welcome to STC Time Management System">
          <font>
             <Font size="24.0" />
          </font>
       </Label>
-      <PasswordField layoutX="227.0" layoutY="200.0" promptText="password" />
-      <TextField layoutX="225.0" layoutY="166.0" promptText="username" />
+      
+      <PasswordField fx:id="passwordField" layoutX="227.0" layoutY="200.0" promptText="password" />
+      
+      <TextField fx:id="usernameField" layoutX="225.0" layoutY="166.0" promptText="username" />
+      
    </children>
 </AnchorPane>
