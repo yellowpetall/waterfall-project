@@ -3,6 +3,8 @@ package com.stc.timeManagement;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.stc.usermanagement.Employee;
+
 public class MonthlyTimeSheet {
 
     private int month;
@@ -11,16 +13,16 @@ public class MonthlyTimeSheet {
     private boolean isReadOnly;
     private List<TimeEntry> entries;
     private ApprovalWorkflow workflow;
-    private int userId; //After Sena's part this will come from UserManagement
+    private Employee employee;
 
-    public MonthlyTimeSheet(int month, int year, int userId) {
+    public MonthlyTimeSheet(int month, int year, Employee employee) {
         this.month = month;
         this.year = year;
-        this.userId = userId;
+        this.employee = employee;
         this.isSubmitted = false;
         this.isReadOnly = false;
         this.entries = new ArrayList<>();
-        this.workflow = new ApprovalWorkflow();
+        this.workflow = new ApprovalWorkflow(employee);
     }
 
     public int getMonth() {
@@ -31,8 +33,8 @@ public class MonthlyTimeSheet {
         return year;
     }
 
-    public int getUserId() {
-        return userId;
+    public Employee getEmployee() {
+        return employee;
     }
 
     public boolean isSubmitted() {
@@ -59,10 +61,6 @@ public class MonthlyTimeSheet {
         this.year = year;
     }
 
-    public void setUserId(int userId) {
-        this.userId = userId;
-    }
-
     public void setSubmitted(boolean submitted) {
         isSubmitted = submitted;
     }
@@ -80,6 +78,11 @@ public class MonthlyTimeSheet {
     }
 
     public void submit() {
+        if (entries.isEmpty()) {
+            System.out.println("Cannot submit an empty time sheet.");
+            return;
+        }
+
         if (workflow.getStatus().equals("Pending") || workflow.getStatus().equals("Rejected")) {
             this.isSubmitted = true;
             this.isReadOnly = true;

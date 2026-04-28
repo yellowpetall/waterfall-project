@@ -81,8 +81,17 @@ public class TimeEntry {
     private double calculateWorkingHours() {
         long startMillis = startTime.getTime();
         long endMillis = endTime.getTime();
+
+        if (endMillis < startMillis) {
+            endMillis += (24 * 60 * 60 * 1000);
+        }
+
         double totalHours = (endMillis - startMillis) / (1000.0 * 60 * 60);
         this.workingHours = totalHours - breakDuration;
+
+        if (this.workingHours < 0) {
+            this.workingHours = 0;
+        }
         return this.workingHours;
     }
 
