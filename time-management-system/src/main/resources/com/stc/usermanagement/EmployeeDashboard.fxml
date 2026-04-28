@@ -1,15 +1,47 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns:fx="http://javafx.com/fxml/1">
+<AnchorPane prefHeight="450.0" prefWidth="650.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.stc.usermanagement.EmployeeDashboardController">
    <children>
-      <Label layoutX="180.0" layoutY="40.0" text="STC Dashboard System">
+      <Label layoutX="193.0" layoutY="25.0" text="STC Dashboard System">
          <font>
             <Font name="System Bold" size="24.0" />
          </font>
       </Label>
-      <Label fx:id="welcomeLabel" layoutX="50.0" layoutY="100.0" text="Welcome Employee!" />
+      
+      <Label fx:id="welcomeLabel" layoutX="45.0" layoutY="96.0" text="Welcome Employee!" />
+      
+      <Label layoutX="340.0" layoutY="96.0" text="Select Month:" />
+      <ComboBox fx:id="monthSelectionCombo" layoutX="419.0" layoutY="92.0" onAction="#handleMonthChange" prefWidth="150.0" />
+
+      <TableView fx:id="timeTable" editable="true" layoutX="45.0" layoutY="125.0" prefHeight="233.0" prefWidth="562.0">
+        <columns>
+            <TableColumn fx:id="projectCol" prefWidth="80.0" text="Project" />
+            <TableColumn fx:id="dateCol" prefWidth="80.0" text="Date" />
+            <TableColumn fx:id="startCol" prefWidth="75.0" text="Start Time" />
+            <TableColumn fx:id="endCol" prefWidth="75.0" text="End Time" />
+            <TableColumn fx:id="breakCol" prefWidth="85.0" text="Break Dur." />
+            <TableColumn fx:id="totalCol" prefWidth="75.0" text="Total Hours" />
+            <TableColumn fx:id="commentCol" prefWidth="90.0" text="Comment" />
+        </columns>
+      </TableView>
+
+      <HBox layoutX="45.0" layoutY="370.0" spacing="15.0">
+         <children>
+            <Button fx:id="addRowBtn" mnemonicParsing="false" onAction="#handleAddRow" text="Add New Row" style="-fx-background-color: #e1f5fe;" />
+            <Button fx:id="submitBtn" mnemonicParsing="false" onAction="#handleSubmit" text="Submit Monthly Sheet" style="-fx-background-color: #c8e6c9;" />
+         </children>
+      </HBox>
+      
+      <Label fx:id="statusLabel" layoutX="45.0" layoutY="410.0" text="Status: Draft" textFill="#757575" />
    </children>
+   <Button layoutX="530.0" layoutY="25.0" mnemonicParsing="false" onAction="#handleLogout" text="Logout" style="-fx-background-color: #ffcdd2;" />
 </AnchorPane>
