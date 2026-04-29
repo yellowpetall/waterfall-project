@@ -13,6 +13,10 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.stage.Stage;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+
 import java.sql.Time;
 import java.util.Date;
 
@@ -174,13 +178,59 @@ public class EmployeeDashboardController {
     @FXML
     private void handleSubmit() {
 
-        submitted = true;
+        try {
 
-        timeTable.setEditable(false);
-        addRowBtn.setDisable(true);
-        submitBtn.setDisable(true);
+            BufferedWriter writer =
+                    new BufferedWriter(
+                            new FileWriter("src/main/resources/timesheets.txt", true)
+                    );
 
-        statusLabel.setText("Status: Submitted");
+            writer.write("----- Monthly Submission -----");
+            writer.newLine();
+
+            writer.write("Month: " +
+                    monthSelectionCombo.getValue());
+            writer.newLine();
+
+            for(TimeEntry entry : entries) {
+
+                writer.write(
+                        entry.getProject().getProjectName()
+                        + " , " +
+                        entry.getDate()
+                        + " , " +
+                        entry.getStartTime()
+                        + " , " +
+                        entry.getEndTime()
+                        + " , " +
+                        entry.getBreakDuration()
+                        + " , " +
+                        entry.getWorkingHours()
+                        + " , " +
+                        entry.getComment()
+                );
+
+                writer.newLine();
+            }
+
+            writer.newLine();
+            writer.newLine();
+
+            writer.close();
+
+            submitted = true;
+
+            timeTable.setEditable(false);
+            addRowBtn.setDisable(true);
+            submitBtn.setDisable(true);
+
+            statusLabel.setText("Status: Submitted");
+
+        } catch (IOException e) {
+
+            statusLabel.setText("Error saving file!");
+            e.printStackTrace();
+        }
     }
 
     @FXML
