@@ -1,16 +1,14 @@
 package com.stc.usermanagement;
 
-import java.io.IOException;
-
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextField;
-import javafx.stage.Stage;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextField;
+import javafx.stage.Stage;
+import java.io.IOException;
 
 public class LoginController {
 
@@ -20,76 +18,61 @@ public class LoginController {
     @FXML
     private PasswordField passwordField;
 
-    // Get the Authentication Service object which will carry out log in functionality.
-    private AuthenticationService authService = new AuthenticationService();
-
     @FXML
     private void handleLogin() {
-        String user = usernameField.getText();
-        String pass = passwordField.getText();
-        
-        System.out.println("Login attempt: " + user);
-        
-        
-        boolean isAuthenticated = authService.authenticate(user, pass);
-        
-        if (isAuthenticated) {
-            // Get the user object of the person who has logged in.
-            User loggedInUser = AuthenticationService.getCurrentUser();
-            
-            System.out.println("Login Successful!");
-            System.out.println("User ID: " + loggedInUser.getUserId());
-            System.out.println("Employee: " + loggedInUser.getClass().getSimpleName());
-            
-            // Go to the user dash board
-            showInfoAlert("Successful", "Welcome, " + user + "!");
-            
-            try {
-                // Load new FXML file
-            	String dashboardName = "";
-            	if(loggedInUser instanceof Employee){
-            		dashboardName = "EmployeeDashboard.fxml";
-            	}else if(loggedInUser instanceof Supervisor) {
-            		dashboardName = "SupervisorDashboard.fxml";
-            	}else {
-            		dashboardName = "HRDashboard.fxml";
-            	}
-            	
-                FXMLLoader loader = new FXMLLoader(getClass().getResource(dashboardName));
-                Parent root = loader.load();
+        String username = usernameField.getText();
+        String password = passwordField.getText();
 
-                // Find the current stage
-                Stage stage = (Stage) usernameField.getScene().getWindow();
+        // 1. Boş alan kontrolü (Validation)
+        if (username.isEmpty() || password.isEmpty()) {
+            showAlert(Alert.AlertType.WARNING, "Eksik Bilgi", "Lütfen kullanıcı adı ve şifre giriniz.");
+            return;
+        }
 
-                // Put new stage in the screen
-                Scene scene = new Scene(root);
-                stage.setScene(scene);
-                stage.show();
-
-            } catch (IOException e) {
-                e.printStackTrace();
-                showErrorAlert("Error", "New screen couldn't be loaded!");
-            }
-            
+        // 2. AuthenticationService üzerinden Veritabanı Kontrolü
+        // Bu metot artık JDBC kullanarak DB'ye soruyor
+        if (AuthenticationService.login(username, password)) {
+            System.out.println("Giriş başarılı, yönlendiriliyor...");
+            navigateToDashboard();
         } else {
-            System.out.println("Login Failed!");
-            showErrorAlert("Login Failed", "Username or password is incorrect.");
+            showAlert(Alert.AlertType.ERROR, "Giriş Başarısız", "Kullanıcı adı veya şifre hatalı!");
         }
     }
 
-    private void showErrorAlert(String title, String message) {
-        Alert alert = new Alert(AlertType.ERROR);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+    private void navigateToDashboard() {
+        try {
+            User currentUser = AuthenticationService.getCurrentUser();
+            String fxmlFile = "";
+
+            // Nesnenin tipine göre yönlendirme yapıyoruz
+            if (currentUser instanceof Employee) {
+                fxmlFile = "EmployeeDashboard.fxml";
+            } else if (currentUser instanceof Supervisor) {
+                fxmlFile = "SupervisorDashboard.fxml";
+            } else if (currentUser instanceof HR) {
+                fxmlFile = "HRDashboard.fxml"; // HR için yeni ekran
+            }
+
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlFile));
+            Parent root = loader.load();
+            
+            Stage stage = (Stage) usernameField.getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.setTitle("STC System - " + currentUser.getClass().getSimpleName());
+            stage.show();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Sistem Hatası", "Ekran yüklenemedi!");
+        }
     }
 
-    private void showInfoAlert(String title, String message) {
-        Alert alert = new Alert(AlertType.INFORMATION);
+
+    private void showAlert(Alert.AlertType type, String title, String content) {
+        Alert alert = new Alert(type);
         alert.setTitle(title);
         alert.setHeaderText(null);
-        alert.setContentText(message);
+        alert.setContentText(content);
         alert.showAndWait();
     }
 }

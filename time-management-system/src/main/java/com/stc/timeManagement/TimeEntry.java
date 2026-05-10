@@ -4,7 +4,7 @@ import java.sql.Time;
 import java.util.Date;
 
 public class TimeEntry {
-
+	private int id;
     private Date date;
     private Time startTime;
     private Time endTime;
@@ -76,6 +76,14 @@ public class TimeEntry {
 
     public void setProject(CustomerProject project) {
         this.project = project;
+    }
+    
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     private double calculateWorkingHours() {

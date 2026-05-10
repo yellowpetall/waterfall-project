@@ -1,29 +1,30 @@
 package com.stc.timeManagement;
 
 public class CustomerProject {
+    private static int idCounter = 1000; // 1000'den başlasın
+    private int id;
+    private String name;
 
-    private int projectId;
-    private String projectName;
-
-    public CustomerProject(int projectId, String projectName) {
-        this.projectId = projectId;
-        this.projectName = projectName;
+    // Sadece isim alan constructor (ID'yi otomatik atar)
+    public CustomerProject(String name) {
+        this.id = idCounter++; 
+        this.name = name;
     }
 
-    public int getProjectId() {
-        return projectId;
+    // Mevcut ID ve isim alan constructor (Geriye dönük uyumluluk için)
+    public CustomerProject(int id, String name) {
+        this.id = id;
+        this.name = name;
     }
 
-    public String getProjectName() {
-        return projectName;
-    }
+    public int getId() { return id; }
+    public String getName() { return name; }
+    
+    @Override
+    public String toString() { return name; }
 
-    public void setProjectId(int projectId) {
-        this.projectId = projectId;
-    }
-
-    public void setProjectName(String projectName) {
-        this.projectName = projectName;
-    }
-
+	public void setName(String newValue) {
+		// TODO Auto-generated method stub
+		this.name = newValue;
+	}
 }
