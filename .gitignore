@@ -1,0 +1,25 @@
+# Maven
+target/
+*.class
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Docker / Postgres bind-mount data (asla repo'ya gitmesin)
+pgdata/
+
+# Local config / secrets
+*.env
+.env*

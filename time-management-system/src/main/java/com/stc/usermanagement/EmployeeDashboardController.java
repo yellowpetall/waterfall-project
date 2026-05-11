@@ -23,7 +23,7 @@ public class EmployeeDashboardController {
     
     // Sütunlar - projectCol tipini Object yaparak karmaşayı önlüyoruz
     @FXML private TableColumn<TimeEntry, Object> projectCol; 
-    @FXML private TableColumn<TimeEntry, String> dateCol;
+    @FXML private TableColumn<TimeEntry, java.util.Date> dateCol;
     @FXML private TableColumn<TimeEntry, Time> startCol;
     @FXML private TableColumn<TimeEntry, Time> endCol;
     @FXML private TableColumn<TimeEntry, Double> breakCol;
@@ -32,8 +32,17 @@ public class EmployeeDashboardController {
 
     @FXML private Button addRowBtn;
     @FXML private Button submitBtn;
+    @FXML private Label statusLabel;
+    @FXML private Label totalHoursLabel;
+    @FXML private Label flexBalanceLabel;
+    @FXML private Label reasonLabel;
+
+    private static final double TARGET_HOURS_PER_MONTH = 160.0;
 
     private ObservableList<TimeEntry> masterData = FXCollections.observableArrayList();
+
+    private String currentAggregateStatus = "DRAFT";
+    private String currentLastReason = null;
 
     @FXML
     public void initialize() {
@@ -92,6 +101,32 @@ public class EmployeeDashboardController {
         commentCol.setCellFactory(TextFieldTableCell.forTableColumn());
         commentCol.setOnEditCommit(event -> event.getRowValue().setComment(event.getNewValue()));
 
+        // Date Sütunu (yyyy-MM-dd)
+        StringConverter<java.util.Date> dateConverter = new StringConverter<>() {
+            private final java.text.SimpleDateFormat fmt = new java.text.SimpleDateFormat("yyyy-MM-dd");
+            @Override
+            public String toString(java.util.Date d) {
+                return d == null ? "" : fmt.format(d);
+            }
+            @Override
+            public java.util.Date fromString(String s) {
+                if (s == null || s.trim().isEmpty()) return null;
+                try { return fmt.parse(s.trim()); }
+                catch (java.text.ParseException ex) { return null; }
+            }
+        };
+        dateCol.setCellFactory(TextFieldTableCell.forTableColumn(dateConverter));
+        dateCol.setOnEditCommit(event -> {
+            java.util.Date d = event.getNewValue();
+            if (d == null) {
+                timeTable.refresh();
+                showAlert("Invalid Date", "Use yyyy-MM-dd format (e.g. 2026-05-11).");
+                return;
+            }
+            event.getRowValue().setDate(d);
+            timeTable.refresh();
+        });
+
         // Start Time & End Time
         StringConverter<Time> timeConverter = new StringConverter<>() {
             @Override
@@ -101,17 +136,45 @@ public class EmployeeDashboardController {
 
             @Override
             public Time fromString(String string) {
-                return Time.valueOf(string);
+                return parseTimeSafe(string);
             }
         };
 
         startCol.setCellFactory(TextFieldTableCell.forTableColumn(timeConverter));
         endCol.setCellFactory(TextFieldTableCell.forTableColumn(timeConverter));
 
+        startCol.setOnEditCommit(event -> {
+            Time t = event.getNewValue();
+            if (t == null) {
+                timeTable.refresh();
+                showAlert("Invalid Time", "Use HH:MM or HH:MM:SS (e.g. 08:00 or 08:30:00).");
+                return;
+            }
+            event.getRowValue().setStartTime(t);
+            timeTable.refresh();
+            recomputeSummary();
+        });
+
+        endCol.setOnEditCommit(event -> {
+            Time t = event.getNewValue();
+            if (t == null) {
+                timeTable.refresh();
+                showAlert("Invalid Time", "Use HH:MM or HH:MM:SS (e.g. 17:00 or 17:30:00).");
+                return;
+            }
+            event.getRowValue().setEndTime(t);
+            timeTable.refresh();
+            recomputeSummary();
+        });
+
 
         // Break Duration
         breakCol.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
-        breakCol.setOnEditCommit(event -> event.getRowValue().setBreakDuration(event.getNewValue()));
+        breakCol.setOnEditCommit(event -> {
+            event.getRowValue().setBreakDuration(event.getNewValue());
+            timeTable.refresh();
+            recomputeSummary();
+        });
     }
 
     // ... handleMonthChange ve enableEditing metodları aynı kalabilir ...
@@ -134,6 +197,9 @@ public class EmployeeDashboardController {
     private void loadDataFromDatabase(String monthName) {
 
         masterData.clear();
+        currentAggregateStatus = "DRAFT";
+        currentLastReason = null;
+        updateSummary("DRAFT", 0.0, null);
 
         String sql = """
             SELECT *
@@ -142,6 +208,10 @@ public class EmployeeDashboardController {
             AND TRIM(UPPER(TO_CHAR(entry_date, 'MONTH'))) = ?
             ORDER BY entry_date
             """;
+
+        String aggregateStatus = "DRAFT";
+        String lastRejectionReason = null;
+        double totalHours = 0.0;
 
         try (Connection conn = DatabaseHelper.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -152,20 +222,20 @@ public class EmployeeDashboardController {
             pstmt.setString(2, monthName.toUpperCase());
 
             ResultSet rs = pstmt.executeQuery();
-            
-            
 
             while (rs.next()) {
-            	
-            	if ("SUBMITTED".equals(rs.getString("status"))) {
-            	    disableEditing();
-            	}
 
-                // Project nesnesi oluştur
+                String rowStatus = rs.getString("status");
+                aggregateStatus = aggregateStatuses(aggregateStatus, rowStatus);
+
+                String reason = rs.getString("rejection_reason");
+                if ("REJECTED".equalsIgnoreCase(rowStatus) && reason != null && !reason.isBlank()) {
+                    lastRejectionReason = reason;
+                }
+
                 CustomerProject project =
                         new CustomerProject(rs.getString("project_name"));
 
-                // TimeEntry oluştur
                 TimeEntry entry = new TimeEntry(
                         rs.getDate("entry_date"),
                         rs.getTime("start_time"),
@@ -175,14 +245,27 @@ public class EmployeeDashboardController {
                         project
                 );
 
-                // DB id'sini sete et
                 entry.setId(rs.getInt("id"));
-
+                totalHours += entry.getWorkingHours();
 
                 masterData.add(entry);
             }
 
             timeTable.setItems(masterData);
+
+            // Sadece tamamen onaylanmış aylar kilitlensin.
+            // DRAFT / SUBMITTED / REJECTED → kullanıcı düzenleyip yeniden gönderebilir.
+            String currentMonth = LocalDate.now().getMonth().name();
+            boolean isCurrentMonth = monthName.equalsIgnoreCase(currentMonth);
+            if ("APPROVED".equals(aggregateStatus) || !isCurrentMonth) {
+                disableEditing();
+            } else {
+                enableEditing(true);
+            }
+
+            this.currentAggregateStatus = aggregateStatus;
+            this.currentLastReason = lastRejectionReason;
+            updateSummary(aggregateStatus, totalHours, lastRejectionReason);
 
         } catch (SQLException e) {
 
@@ -192,6 +275,42 @@ public class EmployeeDashboardController {
                     "Database Error",
                     "Veriler yüklenirken hata oluştu:\n" + e.getMessage()
             );
+        }
+    }
+
+    private String aggregateStatuses(String current, String incoming) {
+        if (incoming == null) return current;
+        String inc = incoming.toUpperCase();
+        if ("REJECTED".equals(inc)) return "REJECTED";
+        if ("REJECTED".equals(current)) return "REJECTED";
+        if ("SUBMITTED".equals(inc) && !"REJECTED".equals(current)) return "SUBMITTED";
+        if ("APPROVED".equals(inc) && !"SUBMITTED".equals(current) && !"REJECTED".equals(current)) return "APPROVED";
+        if ("DRAFT".equals(current)) return inc;
+        return current;
+    }
+
+    private void updateSummary(String status, double totalHours, String lastRejectionReason) {
+        statusLabel.setText("Status: " + status);
+        switch (status) {
+            case "DRAFT"     -> statusLabel.setTextFill(javafx.scene.paint.Color.web("#757575"));
+            case "SUBMITTED" -> statusLabel.setTextFill(javafx.scene.paint.Color.web("#f57c00"));
+            case "APPROVED"  -> statusLabel.setTextFill(javafx.scene.paint.Color.web("#2e7d32"));
+            case "REJECTED"  -> statusLabel.setTextFill(javafx.scene.paint.Color.web("#c62828"));
+            default          -> statusLabel.setTextFill(javafx.scene.paint.Color.web("#757575"));
+        }
+
+        totalHoursLabel.setText(String.format("%.2f h", totalHours));
+
+        double balance = totalHours - TARGET_HOURS_PER_MONTH;
+        flexBalanceLabel.setText(String.format("%+.2f h (target %.0f)", balance, TARGET_HOURS_PER_MONTH));
+        if (balance > 0)      flexBalanceLabel.setTextFill(javafx.scene.paint.Color.web("#2e7d32"));
+        else if (balance < 0) flexBalanceLabel.setTextFill(javafx.scene.paint.Color.web("#c62828"));
+        else                  flexBalanceLabel.setTextFill(javafx.scene.paint.Color.web("#757575"));
+
+        if (lastRejectionReason == null || lastRejectionReason.isBlank()) {
+            reasonLabel.setText("");
+        } else {
+            reasonLabel.setText("Rejection reason: " + lastRejectionReason);
         }
     }
 
@@ -208,6 +327,12 @@ public class EmployeeDashboardController {
         );
         masterData.add(newEntry);
         timeTable.scrollTo(newEntry); // Yeni eklenen satıra kaydır
+        recomputeSummary();
+    }
+
+    private void recomputeSummary() {
+        double total = masterData.stream().mapToDouble(TimeEntry::getWorkingHours).sum();
+        updateSummary(currentAggregateStatus, total, currentLastReason);
     }
 
     @FXML
@@ -222,7 +347,7 @@ public class EmployeeDashboardController {
 
         String updateSql = """
             UPDATE time_entries
-            SET status = 'SUBMITTED'
+            SET status = 'SUBMITTED', rejection_reason = NULL
             WHERE id = ?
             """;
 
@@ -278,6 +403,8 @@ public class EmployeeDashboardController {
             showAlert("Success",
                     "Timesheet başarıyla submitted edildi.");
 
+            loadDataFromDatabase(monthSelectionCombo.getValue());
+
         } catch (SQLException e) {
 
             e.printStackTrace();
@@ -295,6 +422,16 @@ public class EmployeeDashboardController {
             stage.setScene(new javafx.scene.Scene(loader.load()));
             stage.show();
         } catch (Exception e) { e.printStackTrace(); }
+    }
+
+    private Time parseTimeSafe(String input) {
+        if (input == null) return null;
+        String s = input.trim();
+        if (s.isEmpty()) return null;
+        if (s.matches("\\d{1,2}:\\d{2}")) s = (s.length() == 4 ? "0" + s : s) + ":00";
+        else if (s.matches("\\d{1,2}:\\d{2}:\\d{2}") && s.length() == 7) s = "0" + s;
+        try { return Time.valueOf(s); }
+        catch (IllegalArgumentException ex) { return null; }
     }
 
     private void showAlert(String title, String content) {

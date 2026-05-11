@@ -1,15 +1,73 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns:fx="http://javafx.com/fxml/1">
+<VBox prefHeight="600.0" prefWidth="900.0" spacing="12.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.stc.usermanagement.SupervisorDashboardController">
+   <padding>
+      <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
+   </padding>
    <children>
-      <Label layoutX="180.0" layoutY="40.0" text="STC Dashboard System">
-         <font>
-            <Font name="System Bold" size="24.0" />
-         </font>
-      </Label>
-      <Label fx:id="welcomeLabel" layoutX="50.0" layoutY="100.0" text="Welcome Supervisor!" />
+      <HBox alignment="CENTER_LEFT" spacing="12.0">
+         <children>
+            <Label text="STC Supervisor Dashboard">
+               <font>
+                  <Font name="System Bold" size="22.0" />
+               </font>
+            </Label>
+            <Label fx:id="welcomeLabel" text="Welcome Supervisor!" />
+            <HBox HBox.hgrow="ALWAYS" />
+            <Button mnemonicParsing="false" onAction="#handleLogout" style="-fx-background-color: #ffcdd2;" text="Logout" />
+         </children>
+      </HBox>
+
+      <HBox alignment="CENTER_LEFT" spacing="10.0">
+         <children>
+            <Label text="Filter Status:" />
+            <ComboBox fx:id="statusFilterCombo" onAction="#handleFilterChange" prefWidth="180.0" />
+            <Button mnemonicParsing="false" onAction="#handleRefresh" text="Refresh" />
+            <HBox HBox.hgrow="ALWAYS" />
+            <Label fx:id="countLabel" text="0 entries" textFill="#757575" />
+         </children>
+      </HBox>
+
+      <TableView fx:id="entriesTable" VBox.vgrow="ALWAYS">
+         <columns>
+            <TableColumn fx:id="employeeCol" prefWidth="120.0" text="Employee" />
+            <TableColumn fx:id="projectCol" prefWidth="110.0" text="Project" />
+            <TableColumn fx:id="dateCol" prefWidth="100.0" text="Date" />
+            <TableColumn fx:id="startCol" prefWidth="80.0" text="Start" />
+            <TableColumn fx:id="endCol" prefWidth="80.0" text="End" />
+            <TableColumn fx:id="breakCol" prefWidth="70.0" text="Break" />
+            <TableColumn fx:id="totalCol" prefWidth="75.0" text="Total" />
+            <TableColumn fx:id="commentCol" prefWidth="140.0" text="Comment" />
+            <TableColumn fx:id="statusCol" prefWidth="95.0" text="Status" />
+         </columns>
+      </TableView>
+
+      <VBox spacing="6.0">
+         <children>
+            <Label text="Rejection Reason (required when rejecting):" />
+            <TextArea fx:id="rejectionReasonArea" prefRowCount="2" promptText="Why are you rejecting this entry?" />
+         </children>
+      </VBox>
+
+      <HBox spacing="12.0">
+         <children>
+            <Button fx:id="approveBtn" mnemonicParsing="false" onAction="#handleApprove" style="-fx-background-color: #c8e6c9; -fx-font-weight: bold;" text="Approve Selected" />
+            <Button fx:id="rejectBtn" mnemonicParsing="false" onAction="#handleReject" style="-fx-background-color: #ffcdd2; -fx-font-weight: bold;" text="Reject Selected" />
+            <HBox HBox.hgrow="ALWAYS" />
+            <Label fx:id="statusLabel" text="" textFill="#1565c0" />
+         </children>
+      </HBox>
    </children>
-</AnchorPane>
+</VBox>

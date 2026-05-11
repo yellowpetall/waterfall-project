@@ -42,6 +42,14 @@
       </HBox>
       
       <Label fx:id="statusLabel" layoutX="45.0" layoutY="410.0" text="Status: Draft" textFill="#757575" />
+
+      <Label layoutX="240.0" layoutY="410.0" text="Total:" textFill="#424242" />
+      <Label fx:id="totalHoursLabel" layoutX="280.0" layoutY="410.0" text="0.00 h" textFill="#1565c0" />
+
+      <Label layoutX="360.0" layoutY="410.0" text="Flex Balance:" textFill="#424242" />
+      <Label fx:id="flexBalanceLabel" layoutX="445.0" layoutY="410.0" text="0.00 h" textFill="#757575" />
+
+      <Label fx:id="reasonLabel" layoutX="45.0" layoutY="430.0" maxWidth="560.0" text="" textFill="#c62828" wrapText="true" />
    </children>
    <Button layoutX="530.0" layoutY="25.0" mnemonicParsing="false" onAction="#handleLogout" text="Logout" style="-fx-background-color: #ffcdd2;" />
 </AnchorPane>
